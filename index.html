@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Local ChatGPT</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Local ChatGPT</h1>
+
+  <div class="settings">
+    <input id="apiKey" type="password" placeholder="API Key" />
+    <input id="baseUrl" type="text" placeholder="Base URL (e.g. https://api.openai.com/v1)" />
+    <button onclick="saveSettings()">Save</button>
+  </div>
+
+  <div id="chat"></div>
+
+  <textarea id="userInput" placeholder="Type a message..."></textarea>
+  <button onclick="sendMessage()">Send</button>
+
+  <script src="script.js"></script>
+</body>
+</html>
