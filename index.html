@@ -12,7 +12,6 @@
   <h1>Local Chat</h1>
   <div>
     <button onclick="toggleDarkMode()">🌙</button>
-    <button onclick="toggleSettings()">⚙️</button>
   </div>
 </header>
 
@@ -27,18 +26,16 @@
   <!-- MAIN -->
   <main>
 
-    <!-- SETTINGS -->
-    <div id="settings" class="panel hidden">
-      <input id="apiKey" type="password" placeholder="API Key" />
-      <input id="baseUrl" type="text" placeholder="Base URL" />
-      <input id="model" type="text" placeholder="Model ID" />
-      <textarea id="systemPrompt" placeholder="System Prompt"></textarea>
-      <button onclick="saveSettings()">Save Settings</button>
-    </div>
-
     <!-- CHAT -->
     <div id="chat"></div>
 
+    <!-- PER-CHAT SYSTEM PROMPT -->
+    <textarea
+      id="systemPrompt"
+      placeholder="System prompt (applies to this chat only)"
+    ></textarea>
+
+    <!-- INPUT -->
     <textarea
       id="userInput"
       placeholder="Enter = send • Shift+Enter = new line"
