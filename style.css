@@ -1,17 +1,32 @@
-/* existing styles remain */
+* { box-sizing: border-box; }
+
+body {
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  background: #0f1115;
+  color: #e6e6e6;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 15px;
+  border-bottom: 1px solid #333;
+}
 
 .layout {
   display: flex;
-  gap: 10px;
+  height: calc(100vh - 52px);
 }
 
 aside {
-  width: 220px;
-  border-right: 1px solid #444;
-  padding-right: 10px;
+  width: 240px;
+  border-right: 1px solid #333;
+  padding: 10px;
+  overflow-y: auto;
 }
 
-aside button {
+.new-chat {
   width: 100%;
   margin-bottom: 10px;
 }
@@ -19,8 +34,9 @@ aside button {
 .chat-item {
   display: flex;
   justify-content: space-between;
-  padding: 5px;
+  padding: 6px;
   cursor: pointer;
+  border-radius: 4px;
 }
 
 .chat-item:hover {
@@ -28,7 +44,7 @@ aside button {
 }
 
 .chat-item.active {
-  font-weight: bold;
+  background: rgba(255,255,255,0.1);
 }
 
 .chat-item span {
@@ -38,8 +54,39 @@ aside button {
   white-space: nowrap;
 }
 
-.chat-item button {
-  width: auto;
-  margin-left: 5px;
-  padding: 0 5px;
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
 }
+
+.panel {
+  border: 1px solid #444;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.hidden { display: none; }
+
+input, textarea, button {
+  background: #1a1d24;
+  color: inherit;
+  border: 1px solid #444;
+  padding: 8px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+#chat {
+  flex: 1;
+  border: 1px solid #444;
+  padding: 10px;
+  overflow-y: auto;
+  margin-bottom: 8px;
+}
+
+.message { margin-bottom: 8px; }
+.user { color: #60a5fa; }
+.ai { color: #34d399; }
+.error { color: #f87171; }
