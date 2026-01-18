@@ -19,10 +19,6 @@ header {
   border-bottom: 1px solid #333;
 }
 
-.header-buttons button {
-  margin-left: 6px;
-}
-
 .layout {
   display: flex;
   height: calc(100vh - 52px);
@@ -32,24 +28,6 @@ aside {
   width: 240px;
   border-right: 1px solid #333;
   padding: 10px;
-  overflow-y: auto;
-}
-
-.new-chat {
-  width: 100%;
-  margin-bottom: 10px;
-}
-
-.chat-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-.chat-item.active {
-  background: rgba(255,255,255,0.1);
 }
 
 main {
@@ -62,15 +40,14 @@ main {
 .panel {
   border: 1px solid #444;
   padding: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .hidden { display: none; }
 
-/* SYSTEM PROMPT */
 .system-prompt {
   border: 1px solid #444;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .system-header {
@@ -81,16 +58,6 @@ main {
   font-weight: bold;
 }
 
-.system-prompt textarea {
-  width: 100%;
-  padding: 6px;
-  border: none;
-  border-top: 1px solid #444;
-  background: inherit;
-  color: inherit;
-}
-
-/* CHAT */
 #chat {
   flex: 1;
   border: 1px solid #444;
@@ -104,7 +71,6 @@ main {
 .ai { color: #34d399; }
 .error { color: #f87171; }
 
-/* INPUT */
 .input-wrapper {
   position: relative;
 }
@@ -112,13 +78,20 @@ main {
 #userInput {
   width: 100%;
   padding: 10px 40px 10px 10px;
-  resize: none;
 }
 
 .send-btn {
   position: absolute;
   right: 6px;
   bottom: 6px;
-  padding: 6px 10px;
-  cursor: pointer;
+}
+
+.logs-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+#logOutput {
+  font-size: 0.8em;
+  white-space: pre-wrap;
 }
