@@ -8,44 +8,46 @@
 </head>
 <body class="dark">
 
-  <header>
-    <h1>Local Chat UI</h1>
-    <div class="header-buttons">
-      <button onclick="toggleDarkMode()">🌙</button>
-      <button onclick="toggleSettings()">⚙️</button>
-    </div>
-  </header>
-
-  <div class="layout">
-    <!-- CHAT LIST -->
-    <aside id="chatList">
-      <button onclick="newChat()">＋ New Chat</button>
-      <div id="chatItems"></div>
-    </aside>
-
-    <!-- MAIN -->
-    <main>
-      <!-- SETTINGS -->
-      <div id="settings" class="panel hidden">
-        <input id="apiKey" type="password" placeholder="API Key" />
-        <input id="baseUrl" type="text" placeholder="Base URL" />
-        <input id="model" type="text" placeholder="Model ID" />
-        <textarea id="systemPrompt" placeholder="System Prompt"></textarea>
-        <button onclick="saveSettings()">Save Settings</button>
-      </div>
-
-      <!-- CHAT -->
-      <div id="chat"></div>
-
-      <textarea
-        id="userInput"
-        placeholder="Enter to send • Shift+Enter for new line"
-      ></textarea>
-
-      <button onclick="sendMessage()">Send</button>
-    </main>
+<header>
+  <h1>Local Chat</h1>
+  <div>
+    <button onclick="toggleDarkMode()">🌙</button>
+    <button onclick="toggleSettings()">⚙️</button>
   </div>
+</header>
 
-  <script src="script.js"></script>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside>
+    <button class="new-chat" onclick="newChat()">＋ New Chat</button>
+    <div id="chatList"></div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- SETTINGS -->
+    <div id="settings" class="panel hidden">
+      <input id="apiKey" type="password" placeholder="API Key" />
+      <input id="baseUrl" type="text" placeholder="Base URL" />
+      <input id="model" type="text" placeholder="Model ID" />
+      <textarea id="systemPrompt" placeholder="System Prompt"></textarea>
+      <button onclick="saveSettings()">Save Settings</button>
+    </div>
+
+    <!-- CHAT -->
+    <div id="chat"></div>
+
+    <textarea
+      id="userInput"
+      placeholder="Enter = send • Shift+Enter = new line"
+    ></textarea>
+
+    <button onclick="sendMessage()">Send</button>
+  </main>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
