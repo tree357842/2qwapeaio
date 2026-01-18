@@ -3,14 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <title>Local ChatGPT</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
   <h1>Local ChatGPT</h1>
 
+  <!-- SETTINGS PANEL -->
   <div class="panel">
-    <input id="apiKey" type="password" placeholder="API Key" />
-    <input id="baseUrl" type="text" placeholder="Base URL (https://api.openai.com/v1)" />
+    <input
+      id="apiKey"
+      type="password"
+      placeholder="API Key"
+      autocomplete="off"
+    />
+
+    <input
+      id="baseUrl"
+      type="text"
+      placeholder="Base URL (https://api.openai.com/v1)"
+    />
 
     <select id="model">
       <option value="gpt-4o-mini">gpt-4o-mini</option>
@@ -21,14 +34,20 @@
     <button onclick="saveSettings()">Save Settings</button>
   </div>
 
+  <!-- CHAT WINDOW -->
   <div id="chat"></div>
 
-  <textarea id="userInput" placeholder="Type a message..."></textarea>
+  <!-- INPUT -->
+  <textarea
+    id="userInput"
+    placeholder="Type a message..."
+  ></textarea>
+
   <button onclick="sendMessage()">Send</button>
 
   <p class="note">
-    Everything runs locally in your browser.  
-    API keys are stored only on your PC.
+    Runs fully in your browser.  
+    No data is stored online. API keys stay on your PC.
   </p>
 
   <script src="script.js"></script>
