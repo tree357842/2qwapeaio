@@ -2,22 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Local ChatGPT</title>
+  <title>Local Chat UI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="dark">
 
-  <h1>Local ChatGPT</h1>
+  <header>
+    <h1>Local Chat UI</h1>
+    <div class="header-buttons">
+      <button onclick="toggleDarkMode()">🌙</button>
+      <button onclick="toggleSettings()">⚙️</button>
+    </div>
+  </header>
 
   <!-- SETTINGS PANEL -->
-  <div class="panel">
-    <input
-      id="apiKey"
-      type="password"
-      placeholder="API Key"
-      autocomplete="off"
-    />
+  <div id="settings" class="panel hidden">
+    <input id="apiKey" type="password" placeholder="API Key" />
 
     <input
       id="baseUrl"
@@ -25,29 +26,29 @@
       placeholder="Base URL (https://api.openai.com/v1)"
     />
 
-    <select id="model">
-      <option value="gpt-4o-mini">gpt-4o-mini</option>
-      <option value="gpt-4o">gpt-4o</option>
-      <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
-    </select>
+    <input
+      id="model"
+      type="text"
+      placeholder="Model (e.g. gpt-4o, claude-3-opus, local-model)"
+    />
+
+    <textarea
+      id="systemPrompt"
+      placeholder="System Prompt (sets assistant behavior)"
+    ></textarea>
 
     <button onclick="saveSettings()">Save Settings</button>
   </div>
 
-  <!-- CHAT WINDOW -->
+  <!-- CHAT -->
   <div id="chat"></div>
 
   <!-- INPUT -->
-  <textarea
-    id="userInput"
-    placeholder="Type a message..."
-  ></textarea>
-
+  <textarea id="userInput" placeholder="Type a message..."></textarea>
   <button onclick="sendMessage()">Send</button>
 
   <p class="note">
-    Runs fully in your browser.  
-    No data is stored online. API keys stay on your PC.
+    Fully client-side. Nothing stored online.
   </p>
 
   <script src="script.js"></script>
