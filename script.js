@@ -1,17 +1,35 @@
 const chat = document.getElementById("chat");
+const settingsPanel = document.getElementById("settings");
+const body = document.body;
+
 const apiKeyInput = document.getElementById("apiKey");
 const baseUrlInput = document.getElementById("baseUrl");
-const modelSelect = document.getElementById("model");
+const modelInput = document.getElementById("model");
+const systemPromptInput = document.getElementById("systemPrompt");
 
-// Load saved settings
+// Load settings
 apiKeyInput.value = localStorage.getItem("apiKey") || "";
 baseUrlInput.value = localStorage.getItem("baseUrl") || "";
-modelSelect.value = localStorage.getItem("model") || "gpt-4o-mini";
+modelInput.value = localStorage.getItem("model") || "";
+systemPromptInput.value = localStorage.getItem("systemPrompt") || "";
+
+const savedTheme = localStorage.getItem("theme") || "dark";
+body.className = savedTheme;
+
+function toggleDarkMode() {
+  body.className = body.className === "dark" ? "light" : "dark";
+  localStorage.setItem("theme", body.className);
+}
+
+function toggleSettings() {
+  settingsPanel.classList.toggle("hidden");
+}
 
 function saveSettings() {
   localStorage.setItem("apiKey", apiKeyInput.value);
   localStorage.setItem("baseUrl", baseUrlInput.value);
-  localStorage.setItem("model", modelSelect.value);
+  localStorage.setItem("model", modelInput.value);
+  localStorage.setItem("systemPrompt", systemPromptInput.value);
   alert("Settings saved locally");
 }
 
@@ -34,11 +52,18 @@ async function sendMessage() {
   const apiKey = localStorage.getItem("apiKey");
   const baseUrl = localStorage.getItem("baseUrl");
   const model = localStorage.getItem("model");
+  const systemPrompt = localStorage.getItem("systemPrompt");
 
-  if (!apiKey || !baseUrl) {
-    addMessage("Missing API key or Base URL", "error");
+  if (!apiKey || !baseUrl || !model) {
+    addMessage("Missing API key, base URL, or model.", "error");
     return;
   }
+
+  const messages = [];
+  if (systemPrompt) {
+    messages.push({ role: "system", content: systemPrompt });
+  }
+  messages.push({ role: "user", content: message });
 
   try {
     const response = await fetch(`${baseUrl}/chat/completions`, {
@@ -48,10 +73,8 @@ async function sendMessage() {
         "Authorization": `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: model,
-        messages: [
-          { role: "user", content: message }
-        ]
+        model,
+        messages
       })
     });
 
