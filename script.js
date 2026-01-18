@@ -1,8 +1,12 @@
 const chatDiv = document.getElementById("chat");
 const chatList = document.getElementById("chatList");
 const input = document.getElementById("userInput");
-const body = document.body;
-const settingsPanel = document.getElementById("settings");
+const systemPromptInput = document.getElementById("systemPrompt");
+
+/* ---------- SETTINGS (GLOBAL) ---------- */
+const apiKey = localStorage.getItem("apiKey");
+const baseUrl = localStorage.getItem("baseUrl") || "https://api.openai.com/v1";
+const model = localStorage.getItem("model") || "gpt-4o-mini";
 
 /* ---------- STATE ---------- */
 let chats = JSON.parse(localStorage.getItem("chats")) || [];
@@ -13,7 +17,7 @@ if (!chats.length) newChat();
 renderChatList();
 loadChat();
 
-/* ---------- INPUT ---------- */
+/* ---------- INPUT HANDLING ---------- */
 input.addEventListener("keydown", e => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
@@ -21,19 +25,15 @@ input.addEventListener("keydown", e => {
   }
 });
 
-/* ---------- UI ---------- */
-function toggleSettings() {
-  settingsPanel.classList.toggle("hidden");
-}
-
-function toggleDarkMode() {
-  body.classList.toggle("light");
-}
-
 /* ---------- CHAT CRUD ---------- */
 function newChat() {
   const id = Date.now().toString();
-  chats.unshift({ id, title: "New Chat", messages: [] });
+  chats.unshift({
+    id,
+    title: "New Chat",
+    systemPrompt: "",
+    messages: []
+  });
   currentChatId = id;
   save();
   renderChatList();
@@ -42,7 +42,7 @@ function newChat() {
 
 function deleteChat(id) {
   chats = chats.filter(c => c.id !== id);
-  if (currentChatId === id) currentChatId = chats[0]?.id;
+  currentChatId = chats[0]?.id || null;
   save();
   renderChatList();
   loadChat();
@@ -80,29 +80,33 @@ function loadChat() {
   chatDiv.innerHTML = "";
   const chat = chats.find(c => c.id === currentChatId);
   if (!chat) return;
+
+  systemPromptInput.value = chat.systemPrompt || "";
+
   chat.messages.forEach(m =>
-    addMessage(m.content, m.role === "user" ? "user" : "ai")
+    renderMessage(m.role, m.content)
   );
 }
 
+/* ---------- STORAGE ---------- */
 function save() {
   localStorage.setItem("chats", JSON.stringify(chats));
   localStorage.setItem("currentChatId", currentChatId);
 }
 
-/* ---------- MESSAGES ---------- */
-function addMessage(text, cls) {
+/* ---------- RENDERING ---------- */
+function renderMessage(role, text) {
   const div = document.createElement("div");
-  div.className = `message ${cls}`;
-  div.textContent = text;
+  div.className = `message ${role === "user" ? "user" : "ai"}`;
+  div.textContent = (role === "user" ? "You: " : "AI: ") + text;
   chatDiv.appendChild(div);
   chatDiv.scrollTop = chatDiv.scrollHeight;
   return div;
 }
 
-/* ---------- TYPING ANIMATION ---------- */
 function typeText(element, text, speed = 15) {
   let i = 0;
+  element.textContent = "AI: ";
   const interval = setInterval(() => {
     element.textContent += text[i++];
     chatDiv.scrollTop = chatDiv.scrollHeight;
@@ -117,24 +121,23 @@ async function sendMessage() {
   input.value = "";
 
   const chat = chats.find(c => c.id === currentChatId);
+
   chat.messages.push({ role: "user", content: text });
-  addMessage("You: " + text, "user");
+  renderMessage("user", text);
 
   if (chat.messages.length === 1) {
     chat.title = text.slice(0, 30);
     renderChatList();
   }
 
+  chat.systemPrompt = systemPromptInput.value;
   save();
 
-  const apiKey = localStorage.getItem("apiKey");
-  const baseUrl = localStorage.getItem("baseUrl");
-  const model = localStorage.getItem("model");
-  const systemPrompt = localStorage.getItem("systemPrompt");
-
-  const messages = [];
-  if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
-  messages.push(...chat.messages);
+  const payloadMessages = [];
+  if (chat.systemPrompt) {
+    payloadMessages.push({ role: "system", content: chat.systemPrompt });
+  }
+  payloadMessages.push(...chat.messages);
 
   try {
     const res = await fetch(`${baseUrl}/chat/completions`, {
@@ -143,26 +146,24 @@ async function sendMessage() {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`
       },
-      body: JSON.stringify({ model, messages })
+      body: JSON.stringify({
+        model,
+        messages: payloadMessages
+      })
     });
 
     const data = await res.json();
     const reply = data.choices[0].message.content;
 
     chat.messages.push({ role: "assistant", content: reply });
-    const aiDiv = addMessage("AI: ", "ai");
+    const aiDiv = document.createElement("div");
+    aiDiv.className = "message ai";
+    chatDiv.appendChild(aiDiv);
     typeText(aiDiv, reply);
+
     save();
 
   } catch (err) {
-    addMessage("Error: " + err.message, "error");
+    renderMessage("assistant", "Error: " + err.message);
   }
-}
-
-/* ---------- SETTINGS ---------- */
-function saveSettings() {
-  ["apiKey","baseUrl","model","systemPrompt"].forEach(id =>
-    localStorage.setItem(id, document.getElementById(id).value)
-  );
-  alert("Saved locally");
 }
