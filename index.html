@@ -6,12 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="dark">
+<body>
 
 <header>
   <h1>Local Chat</h1>
-  <div>
-    <button onclick="toggleDarkMode()">🌙</button>
+  <div class="header-buttons">
+    <button id="themeBtn" onclick="toggleTheme()">🌙</button>
+    <button onclick="toggleSettings()">⚙️</button>
   </div>
 </header>
 
@@ -26,22 +27,38 @@
   <!-- MAIN -->
   <main>
 
+    <!-- SETTINGS PANEL -->
+    <div id="settings" class="panel hidden">
+      <input id="apiKey" type="password" placeholder="API Key" />
+      <input id="baseUrl" type="text" placeholder="Base URL" />
+      <input id="model" type="text" placeholder="Model ID" />
+      <button onclick="saveSettings()">Save Settings</button>
+    </div>
+
+    <!-- SYSTEM PROMPT (PER CHAT) -->
+    <div class="system-prompt">
+      <div class="system-header" onclick="toggleSystemPrompt()">
+        <span>System Prompt</span>
+        <span id="systemToggle">▾</span>
+      </div>
+      <textarea
+        id="systemPrompt"
+        placeholder="Applies only to this chat"
+      ></textarea>
+    </div>
+
     <!-- CHAT -->
     <div id="chat"></div>
 
-    <!-- PER-CHAT SYSTEM PROMPT -->
-    <textarea
-      id="systemPrompt"
-      placeholder="System prompt (applies to this chat only)"
-    ></textarea>
+    <!-- INPUT AREA -->
+    <div class="input-wrapper">
+      <textarea
+        id="userInput"
+        placeholder="Enter = send • Shift+Enter = new line"
+      ></textarea>
+      <button class="send-btn" onclick="sendMessage()">➤</button>
+    </div>
 
-    <!-- INPUT -->
-    <textarea
-      id="userInput"
-      placeholder="Enter = send • Shift+Enter = new line"
-    ></textarea>
-
-    <button onclick="sendMessage()">Send</button>
   </main>
 </div>
 
