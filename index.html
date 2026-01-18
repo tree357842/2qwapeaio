@@ -13,21 +13,19 @@
   <div class="header-buttons">
     <button id="themeBtn" onclick="toggleTheme()">🌙</button>
     <button onclick="toggleSettings()">⚙️</button>
+    <button onclick="toggleLogs()">🧾</button>
   </div>
 </header>
 
 <div class="layout">
 
-  <!-- SIDEBAR -->
   <aside>
     <button class="new-chat" onclick="newChat()">＋ New Chat</button>
     <div id="chatList"></div>
   </aside>
 
-  <!-- MAIN -->
   <main>
 
-    <!-- SETTINGS PANEL -->
     <div id="settings" class="panel hidden">
       <input id="apiKey" type="password" placeholder="API Key" />
       <input id="baseUrl" type="text" placeholder="Base URL" />
@@ -35,27 +33,27 @@
       <button onclick="saveSettings()">Save Settings</button>
     </div>
 
-    <!-- SYSTEM PROMPT (PER CHAT) -->
+    <div id="logs" class="panel hidden">
+      <div class="logs-header">
+        <strong>Logs</strong>
+        <button onclick="clearLogs()">Clear</button>
+      </div>
+      <pre id="logOutput"></pre>
+    </div>
+
     <div class="system-prompt">
       <div class="system-header" onclick="toggleSystemPrompt()">
         <span>System Prompt</span>
         <span id="systemToggle">▾</span>
       </div>
-      <textarea
-        id="systemPrompt"
-        placeholder="Applies only to this chat"
-      ></textarea>
+      <textarea id="systemPrompt"></textarea>
     </div>
 
-    <!-- CHAT -->
     <div id="chat"></div>
 
-    <!-- INPUT AREA -->
     <div class="input-wrapper">
-      <textarea
-        id="userInput"
-        placeholder="Enter = send • Shift+Enter = new line"
-      ></textarea>
+      <textarea id="userInput"
+        placeholder="Enter = send • Shift+Enter = new line"></textarea>
       <button class="send-btn" onclick="sendMessage()">➤</button>
     </div>
 
