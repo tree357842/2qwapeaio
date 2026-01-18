@@ -16,40 +16,35 @@
     </div>
   </header>
 
-  <!-- SETTINGS PANEL -->
-  <div id="settings" class="panel hidden">
-    <input id="apiKey" type="password" placeholder="API Key" />
+  <div class="layout">
+    <!-- CHAT LIST -->
+    <aside id="chatList">
+      <button onclick="newChat()">＋ New Chat</button>
+      <div id="chatItems"></div>
+    </aside>
 
-    <input
-      id="baseUrl"
-      type="text"
-      placeholder="Base URL (https://api.openai.com/v1)"
-    />
+    <!-- MAIN -->
+    <main>
+      <!-- SETTINGS -->
+      <div id="settings" class="panel hidden">
+        <input id="apiKey" type="password" placeholder="API Key" />
+        <input id="baseUrl" type="text" placeholder="Base URL" />
+        <input id="model" type="text" placeholder="Model ID" />
+        <textarea id="systemPrompt" placeholder="System Prompt"></textarea>
+        <button onclick="saveSettings()">Save Settings</button>
+      </div>
 
-    <input
-      id="model"
-      type="text"
-      placeholder="Model (e.g. gpt-4o, claude-3-opus, local-model)"
-    />
+      <!-- CHAT -->
+      <div id="chat"></div>
 
-    <textarea
-      id="systemPrompt"
-      placeholder="System Prompt (sets assistant behavior)"
-    ></textarea>
+      <textarea
+        id="userInput"
+        placeholder="Enter to send • Shift+Enter for new line"
+      ></textarea>
 
-    <button onclick="saveSettings()">Save Settings</button>
+      <button onclick="sendMessage()">Send</button>
+    </main>
   </div>
-
-  <!-- CHAT -->
-  <div id="chat"></div>
-
-  <!-- INPUT -->
-  <textarea id="userInput" placeholder="Type a message..."></textarea>
-  <button onclick="sendMessage()">Send</button>
-
-  <p class="note">
-    Fully client-side. Nothing stored online.
-  </p>
 
   <script src="script.js"></script>
 </body>
