@@ -1,28 +1,42 @@
-const chatDiv = document.getElementById("chat");
+const chat = document.getElementById("chat");
 const apiKeyInput = document.getElementById("apiKey");
 const baseUrlInput = document.getElementById("baseUrl");
+const modelSelect = document.getElementById("model");
 
 // Load saved settings
 apiKeyInput.value = localStorage.getItem("apiKey") || "";
 baseUrlInput.value = localStorage.getItem("baseUrl") || "";
+modelSelect.value = localStorage.getItem("model") || "gpt-4o-mini";
 
 function saveSettings() {
   localStorage.setItem("apiKey", apiKeyInput.value);
   localStorage.setItem("baseUrl", baseUrlInput.value);
-  alert("Saved locally on your PC");
+  localStorage.setItem("model", modelSelect.value);
+  alert("Settings saved locally");
+}
+
+function addMessage(text, className) {
+  const div = document.createElement("div");
+  div.className = `message ${className}`;
+  div.textContent = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
 }
 
 async function sendMessage() {
-  const message = document.getElementById("userInput").value;
-  document.getElementById("userInput").value = "";
+  const input = document.getElementById("userInput");
+  const message = input.value.trim();
+  if (!message) return;
+  input.value = "";
 
-  addMessage("You", message);
+  addMessage("You: " + message, "user");
 
   const apiKey = localStorage.getItem("apiKey");
   const baseUrl = localStorage.getItem("baseUrl");
+  const model = localStorage.getItem("model");
 
   if (!apiKey || !baseUrl) {
-    addMessage("Error", "API key or Base URL missing.");
+    addMessage("Missing API key or Base URL", "error");
     return;
   }
 
@@ -34,7 +48,7 @@ async function sendMessage() {
         "Authorization": `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: model,
         messages: [
           { role: "user", content: message }
         ]
@@ -42,15 +56,15 @@ async function sendMessage() {
     });
 
     const data = await response.json();
-    addMessage("AI", data.choices[0].message.content);
-  } catch (err) {
-    addMessage("Error", err.message);
-  }
-}
 
-function addMessage(sender, text) {
-  const div = document.createElement("div");
-  div.innerHTML = `<strong>${sender}:</strong> ${text}`;
-  chatDiv.appendChild(div);
-  chatDiv.scrollTop = chatDiv.scrollHeight;
+    if (data.error) {
+      addMessage("Error: " + data.error.message, "error");
+      return;
+    }
+
+    addMessage("AI: " + data.choices[0].message.content, "ai");
+
+  } catch (err) {
+    addMessage("Network error: " + err.message, "error");
+  }
 }
