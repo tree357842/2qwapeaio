@@ -3,32 +3,48 @@ const chatList = document.getElementById("chatList");
 const input = document.getElementById("userInput");
 const systemPromptInput = document.getElementById("systemPrompt");
 const settingsPanel = document.getElementById("settings");
+const logsPanel = document.getElementById("logs");
+const logOutput = document.getElementById("logOutput");
 const themeBtn = document.getElementById("themeBtn");
 const systemToggle = document.getElementById("systemToggle");
 
-/* ---------- GLOBAL SETTINGS ---------- */
+/* ---------- LOGS ---------- */
+let logs = JSON.parse(localStorage.getItem("logs")) || [];
+
+function logEntry(type, data) {
+  logs.push({ time: new Date().toISOString(), type, data });
+  localStorage.setItem("logs", JSON.stringify(logs));
+  renderLogs();
+}
+
+function renderLogs() {
+  logOutput.textContent = logs.slice(-50).map(l =>
+    `[${l.time}] ${l.type}\n${JSON.stringify(l.data, null, 2)}`
+  ).join("\n\n");
+}
+
+function toggleLogs() { logsPanel.classList.toggle("hidden"); }
+function clearLogs() { logs = []; localStorage.removeItem("logs"); renderLogs(); }
+
+/* ---------- THEME ---------- */
+const theme = localStorage.getItem("theme") || "dark";
+document.body.className = theme;
+themeBtn.textContent = theme === "dark" ? "🌙" : "☀️";
+
+function toggleTheme() {
+  const t = document.body.className === "dark" ? "light" : "dark";
+  document.body.className = t;
+  localStorage.setItem("theme", t);
+  themeBtn.textContent = t === "dark" ? "🌙" : "☀️";
+}
+
+/* ---------- SETTINGS ---------- */
+function toggleSettings() { settingsPanel.classList.toggle("hidden"); }
 function saveSettings() {
   ["apiKey","baseUrl","model"].forEach(id =>
     localStorage.setItem(id, document.getElementById(id).value)
   );
-  alert("Settings saved locally");
-}
-
-function toggleSettings() {
-  settingsPanel.classList.toggle("hidden");
-}
-
-/* ---------- THEME ---------- */
-const savedTheme = localStorage.getItem("theme") || "dark";
-document.body.className = savedTheme;
-themeBtn.textContent = savedTheme === "dark" ? "🌙" : "☀️";
-
-function toggleTheme() {
-  const isDark = document.body.classList.toggle("light");
-  const theme = isDark ? "light" : "dark";
-  document.body.className = theme;
-  localStorage.setItem("theme", theme);
-  themeBtn.textContent = theme === "dark" ? "🌙" : "☀️";
+  alert("Saved locally");
 }
 
 /* ---------- STATE ---------- */
@@ -39,8 +55,8 @@ let currentChatId = localStorage.getItem("currentChatId");
 if (!chats.length) newChat();
 renderChatList();
 loadChat();
+renderLogs();
 
-/* ---------- INPUT ---------- */
 input.addEventListener("keydown", e => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
@@ -48,22 +64,10 @@ input.addEventListener("keydown", e => {
   }
 });
 
-/* ---------- SYSTEM PROMPT TOGGLE ---------- */
-function toggleSystemPrompt() {
-  systemPromptInput.classList.toggle("hidden");
-  systemToggle.textContent =
-    systemPromptInput.classList.contains("hidden") ? "▸" : "▾";
-}
-
 /* ---------- CHAT MANAGEMENT ---------- */
 function newChat() {
   const id = Date.now().toString();
-  chats.unshift({
-    id,
-    title: "New Chat",
-    systemPrompt: "",
-    messages: []
-  });
+  chats.unshift({ id, title: "New Chat", systemPrompt: "", messages: [] });
   currentChatId = id;
   save();
   renderChatList();
@@ -82,26 +86,11 @@ function renderChatList() {
   chatList.innerHTML = "";
   chats.forEach(chat => {
     const div = document.createElement("div");
-    div.className = "chat-item" + (chat.id === currentChatId ? " active" : "");
-
-    const title = document.createElement("span");
-    title.textContent = chat.title;
-
-    const del = document.createElement("button");
-    del.textContent = "🗑";
-    del.onclick = e => {
-      e.stopPropagation();
-      deleteChat(chat.id);
-    };
-
+    div.textContent = chat.title;
     div.onclick = () => {
       currentChatId = chat.id;
-      save();
-      renderChatList();
-      loadChat();
+      save(); loadChat(); renderChatList();
     };
-
-    div.append(title, del);
     chatList.appendChild(div);
   });
 }
@@ -110,11 +99,10 @@ function loadChat() {
   chatDiv.innerHTML = "";
   const chat = chats.find(c => c.id === currentChatId);
   if (!chat) return;
-  systemPromptInput.value = chat.systemPrompt || "";
+  systemPromptInput.value = chat.systemPrompt;
   chat.messages.forEach(m => renderMessage(m.role, m.content));
 }
 
-/* ---------- STORAGE ---------- */
 function save() {
   localStorage.setItem("chats", JSON.stringify(chats));
   localStorage.setItem("currentChatId", currentChatId);
@@ -135,9 +123,21 @@ function typeText(el, text) {
   el.textContent = "AI: ";
   const t = setInterval(() => {
     el.textContent += text[i++];
-    chatDiv.scrollTop = chatDiv.scrollHeight;
     if (i >= text.length) clearInterval(t);
   }, 15);
+}
+
+/* ---------- SAFE PARSER ---------- */
+function extractAssistantText(data) {
+  if (!data) return null;
+  if (Array.isArray(data.choices) && data.choices.length > 0) {
+    const c = data.choices[0];
+    if (c.message?.content) return c.message.content;
+    if (typeof c.text === "string") return c.text;
+  }
+  if (typeof data.output_text === "string") return data.output_text;
+  if (typeof data.content === "string") return data.content;
+  return null;
 }
 
 /* ---------- SEND ---------- */
@@ -148,48 +148,46 @@ async function sendMessage() {
 
   const chat = chats.find(c => c.id === currentChatId);
   chat.systemPrompt = systemPromptInput.value;
-
   chat.messages.push({ role: "user", content: text });
   renderMessage("user", text);
-
-  if (chat.messages.length === 1) {
-    chat.title = text.slice(0, 30);
-    renderChatList();
-  }
-
   save();
 
   const payload = [];
   if (chat.systemPrompt) payload.push({ role: "system", content: chat.systemPrompt });
   payload.push(...chat.messages);
 
+  const req = {
+    model: localStorage.getItem("model"),
+    messages: payload
+  };
+
+  logEntry("REQUEST", req);
+
   try {
-    const res = await fetch(
-      `${localStorage.getItem("baseUrl")}/chat/completions`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("apiKey")}`
-        },
-        body: JSON.stringify({
-          model: localStorage.getItem("model"),
-          messages: payload
-        })
-      }
-    );
+    const res = await fetch(`${localStorage.getItem("baseUrl")}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("apiKey")}`
+      },
+      body: JSON.stringify(req)
+    });
 
     const data = await res.json();
-    const reply = data.choices[0].message.content;
+    logEntry("RESPONSE", data);
+
+    const reply = extractAssistantText(data);
+    if (!reply) throw new Error("No assistant text found in response");
 
     chat.messages.push({ role: "assistant", content: reply });
-    const aiDiv = document.createElement("div");
-    aiDiv.className = "message ai";
-    chatDiv.appendChild(aiDiv);
-    typeText(aiDiv, reply);
-
+    const el = document.createElement("div");
+    el.className = "message ai";
+    chatDiv.appendChild(el);
+    typeText(el, reply);
     save();
+
   } catch (err) {
+    logEntry("ERROR", err.message);
     renderMessage("assistant", "Error: " + err.message);
   }
 }
