@@ -8,16 +8,28 @@
 <body>
   <h1>Local ChatGPT</h1>
 
-  <div class="settings">
+  <div class="panel">
     <input id="apiKey" type="password" placeholder="API Key" />
-    <input id="baseUrl" type="text" placeholder="Base URL (e.g. https://api.openai.com/v1)" />
-    <button onclick="saveSettings()">Save</button>
+    <input id="baseUrl" type="text" placeholder="Base URL (https://api.openai.com/v1)" />
+
+    <select id="model">
+      <option value="gpt-4o-mini">gpt-4o-mini</option>
+      <option value="gpt-4o">gpt-4o</option>
+      <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+    </select>
+
+    <button onclick="saveSettings()">Save Settings</button>
   </div>
 
   <div id="chat"></div>
 
   <textarea id="userInput" placeholder="Type a message..."></textarea>
   <button onclick="sendMessage()">Send</button>
+
+  <p class="note">
+    Everything runs locally in your browser.  
+    API keys are stored only on your PC.
+  </p>
 
   <script src="script.js"></script>
 </body>
