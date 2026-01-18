@@ -1,93 +1,144 @@
-const chat = document.getElementById("chat");
-const settingsPanel = document.getElementById("settings");
-const body = document.body;
+const chatDiv = document.getElementById("chat");
+const chatItemsDiv = document.getElementById("chatItems");
+const input = document.getElementById("userInput");
 
-const apiKeyInput = document.getElementById("apiKey");
-const baseUrlInput = document.getElementById("baseUrl");
-const modelInput = document.getElementById("model");
-const systemPromptInput = document.getElementById("systemPrompt");
+/* ---------- STATE ---------- */
+let chats = JSON.parse(localStorage.getItem("chats")) || [];
+let currentChatId = localStorage.getItem("currentChatId");
 
-// Load settings
-apiKeyInput.value = localStorage.getItem("apiKey") || "";
-baseUrlInput.value = localStorage.getItem("baseUrl") || "";
-modelInput.value = localStorage.getItem("model") || "";
-systemPromptInput.value = localStorage.getItem("systemPrompt") || "";
+/* ---------- INIT ---------- */
+if (!chats.length) newChat();
+renderChatList();
+loadChat();
 
-const savedTheme = localStorage.getItem("theme") || "dark";
-body.className = savedTheme;
+/* ---------- INPUT BEHAVIOR ---------- */
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
 
-function toggleDarkMode() {
-  body.className = body.className === "dark" ? "light" : "dark";
-  localStorage.setItem("theme", body.className);
+/* ---------- CHAT MANAGEMENT ---------- */
+function newChat() {
+  const id = Date.now().toString();
+  chats.push({
+    id,
+    title: "New Chat",
+    messages: []
+  });
+  currentChatId = id;
+  saveChats();
+  renderChatList();
+  loadChat();
 }
 
-function toggleSettings() {
-  settingsPanel.classList.toggle("hidden");
+function deleteChat(id) {
+  chats = chats.filter(c => c.id !== id);
+  if (currentChatId === id) {
+    currentChatId = chats[0]?.id || null;
+  }
+  saveChats();
+  renderChatList();
+  loadChat();
 }
 
-function saveSettings() {
-  localStorage.setItem("apiKey", apiKeyInput.value);
-  localStorage.setItem("baseUrl", baseUrlInput.value);
-  localStorage.setItem("model", modelInput.value);
-  localStorage.setItem("systemPrompt", systemPromptInput.value);
-  alert("Settings saved locally");
+function renderChatList() {
+  chatItemsDiv.innerHTML = "";
+  chats.forEach(chat => {
+    const div = document.createElement("div");
+    div.className = "chat-item" + (chat.id === currentChatId ? " active" : "");
+
+    const title = document.createElement("span");
+    title.textContent = chat.title;
+
+    const del = document.createElement("button");
+    del.textContent = "🗑";
+    del.onclick = (e) => {
+      e.stopPropagation();
+      deleteChat(chat.id);
+    };
+
+    div.onclick = () => {
+      currentChatId = chat.id;
+      saveChats();
+      renderChatList();
+      loadChat();
+    };
+
+    div.appendChild(title);
+    div.appendChild(del);
+    chatItemsDiv.appendChild(div);
+  });
 }
 
+function loadChat() {
+  chatDiv.innerHTML = "";
+  const chat = chats.find(c => c.id === currentChatId);
+  if (!chat) return;
+
+  chat.messages.forEach(m => {
+    addMessage(m.content, m.role === "user" ? "user" : "ai");
+  });
+}
+
+function saveChats() {
+  localStorage.setItem("chats", JSON.stringify(chats));
+  localStorage.setItem("currentChatId", currentChatId);
+}
+
+/* ---------- MESSAGES ---------- */
 function addMessage(text, className) {
   const div = document.createElement("div");
   div.className = `message ${className}`;
   div.textContent = text;
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
+  chatDiv.appendChild(div);
+  chatDiv.scrollTop = chatDiv.scrollHeight;
 }
 
 async function sendMessage() {
-  const input = document.getElementById("userInput");
-  const message = input.value.trim();
-  if (!message) return;
+  const text = input.value.trim();
+  if (!text) return;
   input.value = "";
 
-  addMessage("You: " + message, "user");
+  const chat = chats.find(c => c.id === currentChatId);
+  chat.messages.push({ role: "user", content: text });
+  addMessage("You: " + text, "user");
+
+  if (chat.messages.length === 1) {
+    chat.title = text.slice(0, 30);
+    renderChatList();
+  }
+
+  saveChats();
 
   const apiKey = localStorage.getItem("apiKey");
   const baseUrl = localStorage.getItem("baseUrl");
   const model = localStorage.getItem("model");
   const systemPrompt = localStorage.getItem("systemPrompt");
 
-  if (!apiKey || !baseUrl || !model) {
-    addMessage("Missing API key, base URL, or model.", "error");
-    return;
-  }
-
   const messages = [];
-  if (systemPrompt) {
-    messages.push({ role: "system", content: systemPrompt });
-  }
-  messages.push({ role: "user", content: message });
+  if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
+  messages.push(...chat.messages);
 
   try {
-    const response = await fetch(`${baseUrl}/chat/completions`, {
+    const res = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`
       },
-      body: JSON.stringify({
-        model,
-        messages
-      })
+      body: JSON.stringify({ model, messages })
     });
 
-    const data = await response.json();
+    const data = await res.json();
+    const reply = data.choices[0].message.content;
 
-    if (data.error) {
-      addMessage("Error: " + data.error.message, "error");
-      return;
-    }
-
-    addMessage("AI: " + data.choices[0].message.content, "ai");
+    chat.messages.push({ role: "assistant", content: reply });
+    addMessage("AI: " + reply, "ai");
+    saveChats();
 
   } catch (err) {
-    addMessage("Network error: " + err.message, "error");
+    addMessage("Error: " + err.message, "error");
   }
 }
